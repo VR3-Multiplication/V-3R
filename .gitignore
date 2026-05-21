@@ -1,0 +1,36 @@
+# Root gitignore for Math Runner project
+
+# OS and Log Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+logcat.txt
+
+# Recursive patterns for build outputs and IDEs
+**/build/
+**/.gradle/
+**/.dart_tool/
+**/.pub/
+**/.pub-cache/
+**/.vscode/
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# Unity specific (game_unity)
+game_unity/Library/
+game_unity/Temp/
+game_unity/Obj/
+game_unity/Logs/
+game_unity/UserSettings/
+game_unity/sysinfo.txt
+game_unity/*.csproj
+game_unity/*.unityproj
+game_unity/*.sln
+game_unity/*.suo
+game_unity/*.user
+game_unity/*.userprefs
+game_unity/*.pidb
+game_unity/*.developerprofile

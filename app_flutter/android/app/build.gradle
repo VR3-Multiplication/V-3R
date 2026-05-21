@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'dev.flutter.flutter-gradle-plugin'
+
+android {
+    namespace = "com.example.app_flutter"
+    compileSdk 36
+    ndkVersion = "28.2.13676358"
+
+    buildFeatures {
+        prefab true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId = "com.example.app_flutter"
+        minSdkVersion 25
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    packagingOptions {
+        doNotStrip "**/*.so"
+    }
+}
+
+flutter {
+    source "../../"
+}
+
+dependencies {
+    implementation project(":unityLibrary")
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.games:games-activity:3.0.5"
+    implementation "androidx.core:core-ktx:1.12.0"
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug') {
+        task.doLast {
+            copy {
+                from "build/outputs/flutter-apk/app-debug.apk"
+                into "../../build/app/outputs/flutter-apk"
+            }
+        }
+    }
+}
