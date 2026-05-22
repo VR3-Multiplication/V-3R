@@ -35,10 +35,13 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
   bool _missionFinished = false;
   bool _dialogShowing = false;
 
-  int get _totalQuestionsOfMission {
-    if (widget.mission == null) return 0;
-    final tables = widget.mission!.tables;
-    return (tables.length * 10).clamp(10, 20);
+  int get _totalQuestionsLimit {
+    if (widget.mission != null) {
+      final tables = widget.mission!.tables;
+      return (tables.length * 10).clamp(10, 20);
+    } else {
+      return (_selectedTables.length * 10).clamp(10, 20);
+    }
   }
 
   @override
@@ -71,8 +74,8 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
               onMessageFromUnity: _onUnityMessage,
             ),
             
-            // HUD en temps réel (uniquement en mission et si le jeu est lancé et non en pause)
-            if (_gameStarted && widget.mission != null && !_isPaused)
+            // HUD en temps réel (si le jeu est lancé et non en pause)
+            if (_gameStarted && !_isPaused)
               Positioned(
                 top: 40,
                 left: 20,
@@ -401,12 +404,16 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
       _lastQuestionStartTime = DateTime.now();
     });
 
-    // Check early failure / success if we are in mission
+    // Check early failure / success
     if (widget.mission != null) {
       final maxErrors = widget.mission!.maxErrors ?? 3;
       if (_errorCount > maxErrors) {
         _finishMission(success: false);
-      } else if (_questionsAnswered >= _totalQuestionsOfMission) {
+      } else if (_questionsAnswered >= _totalQuestionsLimit) {
+        _finishMission(success: true);
+      }
+    } else {
+      if (_questionsAnswered >= _totalQuestionsLimit) {
         _finishMission(success: true);
       }
     }
@@ -512,9 +519,9 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
       final avgTimeLimit = mission.avgTimeLimit;
       final questionTimeLimit = mission.questionTimeLimit;
 
-      if (_questionsAnswered < _totalQuestionsOfMission) {
+      if (_questionsAnswered < _totalQuestionsLimit) {
         missionSucceeded = false;
-        failedCriteria.add("Calculs résolus : $_questionsAnswered / $_totalQuestionsOfMission");
+        failedCriteria.add("Calculs résolus : $_questionsAnswered / $_totalQuestionsLimit");
       }
 
       if (maxErrors != null && _errorCount > maxErrors) {
@@ -755,7 +762,7 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
                   icon: Icons.track_changes_rounded,
                   color: Colors.blue,
                   title: 'Résoudre correctement :',
-                  value: '$_totalQuestionsOfMission calculs',
+                  value: '$_totalQuestionsLimit calculs',
                 ),
                 if (maxErrors != null)
                   _buildObjectiveItem(
@@ -880,9 +887,8 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
   }
 
   Widget _buildHUD() {
-    final mission = widget.mission!;
-    final maxErrors = mission.maxErrors;
-    final avgTimeLimit = mission.avgTimeLimit;
+    final maxErrors = widget.mission?.maxErrors;
+    final avgTimeLimit = widget.mission?.avgTimeLimit;
     
     final avgTime = _responseTimes.isEmpty
         ? 0.0
@@ -908,15 +914,15 @@ class _UnityGameScreenState extends ConsumerState<UnityGameScreen> {
           _buildHUDLine(
             icon: Icons.track_changes_rounded,
             color: Colors.blue.shade300,
-            text: 'Calculs : $_questionsAnswered / $_totalQuestionsOfMission',
-            isSuccess: _questionsAnswered >= _totalQuestionsOfMission,
+            text: 'Calculs : $_questionsAnswered / $_totalQuestionsLimit',
+            isSuccess: _questionsAnswered >= _totalQuestionsLimit,
           ),
           const SizedBox(height: 8),
           
           _buildHUDLine(
             icon: Icons.error_outline_rounded,
-            color: _errorCount > (maxErrors ?? 3) ? Colors.red.shade300 : Colors.orange.shade300,
-            text: 'Erreurs : $_errorCount / ${maxErrors ?? 3}',
+            color: Colors.orange.shade300,
+            text: 'Erreurs : $_errorCount' + (maxErrors != null ? ' / $maxErrors' : ''),
             isFailure: maxErrors != null && _errorCount > maxErrors,
           ),
           
